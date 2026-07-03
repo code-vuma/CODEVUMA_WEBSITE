@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand colours */
+  --color-navy:      #0D1230;
+  --color-blue:      #2563EB;
+  --color-muted:     #5A6481;
+  --color-white:     #FFFFFF;
+  --color-navy-800:  #161d45;
+  --color-navy-700:  #1e2754;
+  --color-blue-600:  #1d4ed8;
+
+  /* Typography */
+  --font-display: "Syne", sans-serif;
+  --font-sans:    "DM Sans", sans-serif;
+
+  /* Border radius */
+  --radius-card: 1rem;
+}
+
+/* Base resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Offset fixed navbar when jumping to section anchors */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(5px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1);   opacity: 0.3; }
+  50%       { transform: translateY(-10px) scale(1.15); opacity: 0.65; }
+}
+
+@keyframes slowSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.14; transform: scale(1); }
+  50%       { opacity: 0.22; transform: scale(1.06); }
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-white);
+  color: var(--color-navy);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

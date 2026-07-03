@@ -1,0 +1,22 @@
+# .NET build output
+bin/
+obj/
+
+# Local dev secrets — never commit these
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# SQLite local DB
+*.db
+*.db-shm
+*.db-wal
+
+# User-specific VS/Rider files
+.vs/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db

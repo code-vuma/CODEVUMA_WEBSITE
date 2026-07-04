@@ -8,7 +8,10 @@ function useProjects() {
 
   useEffect(() => {
     getProjects()
-      .then((res) => setProjects(res.data))
+      .then((res) => {
+        const data = Array.isArray(res.data) ? res.data : (res.data?.$values ?? [])
+        setProjects(data)
+      })
       .catch((err) => setError(err))
       .finally(() => setLoading(false))
   }, [])

@@ -153,82 +153,54 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Swagger enabled in all environments for admin verification
+app.Use(async (context, next) =>
 {
-    // Intercept the generated swagger JSON and inject a Bearer security scheme if it's missing.
-    app.Use(async (context, next) =>
+    if (context.Request.Path.StartsWithSegments("/swagger/v1/swagger.json"))
     {
-        if (context.Request.Path.StartsWithSegments("/swagger/v1/swagger.json"))
+        var originalBody = context.Response.Body;
+        await using var mem = new MemoryStream();
+        context.Response.Body = mem;
+        await next();
+        mem.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(mem, Encoding.UTF8);
+        var json = await reader.ReadToEndAsync();
+        JsonNode? node = null;
+        try { node = JsonNode.Parse(json); } catch { node = new JsonObject(); }
+        if (node is JsonObject root)
         {
-            var originalBody = context.Response.Body;
-            await using var mem = new MemoryStream();
-            context.Response.Body = mem;
-            await next();
-            mem.Seek(0, SeekOrigin.Begin);
-            using var reader = new StreamReader(mem, Encoding.UTF8);
-            var json = await reader.ReadToEndAsync();
-
-            JsonNode? node = null;
-            try
-            {
-                node = JsonNode.Parse(json);
-            }
-            catch
-            {
-                node = new JsonObject();
-            }
-
-            if (node is JsonObject root)
-            {
-                var components = root["components"] as JsonObject;
-                if (components == null)
-                {
-                    components = new JsonObject();
-                    root["components"] = components;
-                }
-
-                var securitySchemes = components["securitySchemes"] as JsonObject;
-                if (securitySchemes == null)
-                {
-                    securitySchemes = new JsonObject();
-                    components["securitySchemes"] = securitySchemes;
-                }
-
-                if (!securitySchemes.ContainsKey("Bearer"))
-                {
-                    securitySchemes["Bearer"] = JsonNode.Parse("{\"type\":\"http\",\"scheme\":\"bearer\",\"bearerFormat\":\"JWT\",\"in\":\"header\",\"name\":\"Authorization\",\"description\":\"JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'\"}");
-                }
-
-                // ensure top-level security requirement is present
-                if (!root.ContainsKey("security"))
-                {
-                    root["security"] = JsonArray.Parse("[{\"Bearer\":[]}]" );
-                }
-
-                var modified = root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                context.Response.ContentLength = Encoding.UTF8.GetByteCount(modified);
-                context.Response.Body = originalBody;
-                await context.Response.WriteAsync(modified);
-                return;
-            }
-
+            var components = root["components"] as JsonObject ?? new JsonObject();
+            root["components"] = components;
+            var securitySchemes = components["securitySchemes"] as JsonObject ?? new JsonObject();
+            components["securitySchemes"] = securitySchemes;
+            if (!securitySchemes.ContainsKey("Bearer"))
+                securitySchemes["Bearer"] = JsonNode.Parse("{\"type\":\"http\",\"scheme\":\"bearer\",\"bearerFormat\":\"JWT\",\"in\":\"header\",\"name\":\"Authorization\"}");
+            if (!root.ContainsKey("security"))
+                root["security"] = JsonArray.Parse("[{\"Bearer\":[]}]");
+            var modified = root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            context.Response.ContentLength = Encoding.UTF8.GetByteCount(modified);
             context.Response.Body = originalBody;
-            await context.Response.WriteAsync(json);
+            await context.Response.WriteAsync(modified);
             return;
         }
+        context.Response.Body = originalBody;
+        await context.Response.WriteAsync(json);
+        return;
+    }
+    await next();
+});
+app.UseSwagger();
+app.UseSwaggerUI();
 
-        await next();
-    });
-
-    app.UseSwagger();
-    app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
     app.UseCors("DevCors");
 }
 else
 {
-    // Railway terminates TLS at the proxy — don't redirect internally.
     app.UseCors("ProdCors");
 }
+
 
 app.UseAuthentication();
 app.UseAuthorization();

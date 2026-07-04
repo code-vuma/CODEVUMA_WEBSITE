@@ -1,6 +1,5 @@
 import { Component } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
+import { Outlet } from 'react-router-dom'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -27,9 +26,7 @@ class ErrorBoundary extends Component {
 function App() {
   return (
     <ErrorBoundary>
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
+      <Outlet />
     </ErrorBoundary>
   )
 }

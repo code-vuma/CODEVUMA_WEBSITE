@@ -145,6 +145,13 @@ builder.Services.AddAuthentication(options =>
 });
 var app = builder.Build();
 
+// Auto-apply EF migrations on startup (creates SQLite schema if it doesn't exist)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CodeVumaDbContext>();
+    db.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -219,8 +226,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // Redirect to HTTPS and apply the origin whitelist in production.
-    app.UseHttpsRedirection();
+    // Railway terminates TLS at the proxy — don't redirect internally.
     app.UseCors("ProdCors");
 }
 
